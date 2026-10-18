@@ -31,6 +31,7 @@ const key=new THREE.DirectionalLight(0xffffff,3);key.position.set(-3,6,5);scene.
 const fill=new THREE.DirectionalLight(0xe1e6fb,1);fill.position.set(4,0,-4);scene.add(fill);
 const grid=new THREE.GridHelper(12,24,0xc4c8bd,0xe1e4db);grid.position.y=-1.45;grid.visible=false;scene.add(grid);
 let current,mode='edges',loadId=0;
+const displayMaterials=new WeakMap();
 let conversionSource,converting=false;
 let activeSdf;
 const meshInfo=setupMeshInfo({panel:$('#info-panel'),button:$('#info'),close:$('#close-info'),body:$('#info-body'),status:$('#info-status'),connectivity:$('#info-connectivity'),download:$('#download-info'),getSource:()=>activeSdf?undefined:conversionSource});
@@ -45,13 +46,23 @@ function fit(){
 function dispose(object){
   object.traverse(child=>{
     child.geometry?.dispose();
-    if(child.material){for(const material of [].concat(child.material))material.dispose();}
+    const cached=displayMaterials.get(child);
+    const materials=new Set([].concat(child.material||[],cached?Object.values(cached):[]));
+    for(const material of materials)material.dispose();
+    displayMaterials.delete(child);
   });
 }
 function viewMode(){
+  activeSdf?.view.setMode(mode);
   current?.traverse(child=>{
     if(child.userData.edge)child.visible=mode==='edges';
-    else if(child.isMesh)child.material.wireframe=mode==='wire';
+    else if(child.isMesh){
+      const materials=displayMaterials.get(child);
+      const material=mode==='normal'?materials.normal:materials.solid;
+      child.material=material;
+      material.wireframe=mode==='wire';
+      material.polygonOffset=mode==='edges';
+    }
   });
   document.querySelectorAll('[data-mode]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.mode===mode)));
 }
@@ -71,8 +82,12 @@ function display(object,name){
     if(child.isMesh){
       triangles+=(child.geometry.index?.count ?? position.count)/3*(child.isInstancedMesh?child.count:1);
       if(triangles>2000000)throw Error('This mesh exceeds the 2 million display triangle limit.');
+      if(!child.geometry.attributes.normal)child.geometry.computeVertexNormals();
       const previous=child.material;
-      child.material=new THREE.MeshStandardMaterial({color:0xb9b3c9,roughness:.85,metalness:0,flatShading:true,side:THREE.DoubleSide,polygonOffset:true,polygonOffsetFactor:1,polygonOffsetUnits:1});
+      const solid=new THREE.MeshStandardMaterial({color:0xb9b3c9,roughness:.85,metalness:0,flatShading:true,side:THREE.DoubleSide,polygonOffsetFactor:1,polygonOffsetUnits:1});
+      const normal=new THREE.MeshNormalMaterial({side:THREE.DoubleSide,toneMapped:false});
+      displayMaterials.set(child,{solid,normal});
+      child.material=mode==='normal'?normal:solid;
       for(const material of [].concat(previous)){if(!material)continue;for(const value of Object.values(material))if(value?.isTexture)value.dispose();material.dispose();}
     }
   });
@@ -217,7 +232,7 @@ async function openSdfFiles(files,model,config={resolution:64,iso:0,min:[-1,-1,-
   notify('Preparing ONNX field…',false,true);
   let next;
   try{
-    const {buildSdfView}=await import('./sdf-view.js?v=memory-cleanup-1');
+    const {buildSdfView}=await import('./sdf-view.js?v=normal-colors-1');
     next=await buildSdfView({files,model,config,onProgress:message=>{if(id===loadId)notify(message,false,true);},cancelled:()=>id!==loadId});
     if(id!==loadId){next.view.dispose();return;}
     clearSdf();
@@ -230,8 +245,8 @@ async function openSdfFiles(files,model,config={resolution:64,iso:0,min:[-1,-1,-
     for(let axis=0;axis<3;axis++)viewCenter.setComponent(axis,(sample.config.min[axis]+sample.config.max[axis])/2);
     radius=new THREE.Vector3(...sample.config.max).sub(new THREE.Vector3(...sample.config.min)).length()/2;
     controls.enabled=true;$('#fit').disabled=false;$('.corner-label').hidden=false;
-    fit();mode='solid';viewMode();grid.visible=false;$('#grid').setAttribute('aria-pressed','false');$('#grid').disabled=true;
-    for(const button of document.querySelectorAll('[data-mode]'))button.disabled=button.dataset.mode!=='solid';
+    fit();if(mode!=='normal'&&mode!=='solid')mode='solid';viewMode();grid.visible=false;$('#grid').setAttribute('aria-pressed','false');$('#grid').disabled=true;
+    for(const button of document.querySelectorAll('[data-mode]'))button.disabled=!['normal','solid'].includes(button.dataset.mode);
     $('#convert').disabled=true;$('#convert').title='Mesh conversion is unavailable for ONNX scalar fields.';$('#sdf-settings').hidden=false;
     $('#model-label').textContent=model.name+' · SCALAR FIELD';$('#drop-hint').hidden=true;
     $('#stats').textContent=sample.config.resolution+'³ samples · WebGPU ray marching';
@@ -289,7 +304,13 @@ window.addEventListener('resize',()=>{
   renderer.setSize(innerWidth,innerHeight);camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();
 });
 renderer.setSize(innerWidth,innerHeight);camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();
-fit();
+const demo=new THREE.Mesh(new THREE.TorusKnotGeometry(.76,.24,96,12));
+demo.rotation.set(.3,-.2,.2);
+// Capture original coordinates before display centers/scales the demo.
+conversionSource=captureConversion(demo,'Torus knot');
+display(demo,'Torus knot');
+$('#info').disabled=false;
+$('#convert').disabled=false;
 renderer.setAnimationLoop(()=>{controls.update();orientationGizmo.update(camera);if(activeSdf){if(!activeSdf.failed){try{activeSdf.view.render(camera);}catch(error){activeSdf.failed=true;notify('WebGPU rendering stopped: '+error.message,true,true);}}}else renderer.render(scene,camera);});
 renderer.domElement.addEventListener('webglcontextlost',event=>{event.preventDefault();notify('The graphics context was lost. Reload the page to restore the viewer.',true,true);});
 

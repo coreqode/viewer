@@ -20,7 +20,7 @@ export class SdfView {
     Object.assign(this,{device,canvas,context,pipeline,uniform,texture,bindGroup});
     // Rendering/settings need metadata only. The uploaded CPU volume can be collected.
     this.sample={...sample};delete this.sample.values;
-    this.inverse=new Matrix4();this.parameters=new Float32Array(32);this.disposed=false;
+    this.inverse=new Matrix4();this.parameters=new Float32Array(48);this.mode='solid';this.disposed=false;
   }
   static async create(device,sample,{canvas=document.createElement('canvas'),format=navigator.gpu.getPreferredCanvasFormat()}={}){
     validateTextureSize(device,sample.config);
@@ -30,7 +30,7 @@ export class SdfView {
     try{
       context.configure({device,format,alphaMode:'opaque'});
       canvas.className='sdf-canvas';canvas.setAttribute('aria-hidden','true');
-      const source=await(await fetch(new URL('./sdf-raymarch.wgsl?v=sdf-upload-3',import.meta.url),{cache:'no-store'})).text();
+      const source=await(await fetch(new URL('./sdf-raymarch.wgsl?v=normal-colors-1',import.meta.url),{cache:'no-store'})).text();
       const module=device.createShaderModule({code:source,label:'Neural SDF ray marcher'});
       const compilation=await module.getCompilationInfo();
       const errors=compilation.messages.filter(message=>message.type==='error');
@@ -53,7 +53,7 @@ export class SdfView {
         device.queue.writeTexture({texture,origin:[0,0,z]},upload.buffer,{bytesPerRow:n*4,rowsPerImage:n},{width:n,height:n,depthOrArrayLayers:depth});
         await device.queue.onSubmittedWorkDone();
       }
-      uniform=device.createBuffer({size:128,usage:GPUBufferUsage.UNIFORM|GPUBufferUsage.COPY_DST});
+      uniform=device.createBuffer({size:192,usage:GPUBufferUsage.UNIFORM|GPUBufferUsage.COPY_DST});
       const bindGroup=device.createBindGroup({layout,entries:[{binding:0,resource:{buffer:uniform}},{binding:1,resource:texture.createView()}]});
       await device.queue.onSubmittedWorkDone();
       const error=await device.popErrorScope();validationScopeOpen=false;
@@ -64,6 +64,10 @@ export class SdfView {
     }catch(error){if(validationScopeOpen)await device.popErrorScope().catch(()=>{});if(memoryScopeOpen)await device.popErrorScope().catch(()=>{});texture?.destroy();uniform?.destroy();context.unconfigure();canvas.remove();throw error;}
   }
   setIso(value){this.sample.config.iso=value;}
+  setMode(mode){
+    if(mode!=='normal'&&mode!=='solid')throw Error('ONNX fields support Normal and Solid display modes.');
+    this.mode=mode;
+  }
   render(camera){
     if(this.disposed)return;
     const ratio=Math.min(globalThis.devicePixelRatio||1,1.25,1280/Math.max(innerWidth,innerHeight));
@@ -75,7 +79,8 @@ export class SdfView {
     this.parameters.set([camera.position.x,camera.position.y,camera.position.z,0],16);
     this.parameters.set([...this.sample.config.min,0],20);
     this.parameters.set([...this.sample.config.max,0],24);
-    this.parameters.set([this.sample.config.resolution,this.sample.config.iso,0,0],28);
+    this.parameters.set([this.sample.config.resolution,this.sample.config.iso,this.mode==='normal'?1:0,0],28);
+    this.parameters.set(camera.matrixWorldInverse.elements,32);
     this.device.queue.writeBuffer(this.uniform,0,this.parameters);
     const encoder=this.device.createCommandEncoder();
     const pass=encoder.beginRenderPass({colorAttachments:[{view:this.context.getCurrentTexture().createView(),clearValue:{r:.96862745,g:.96862745,b:.96078431,a:1},loadOp:'clear',storeOp:'store'}]});

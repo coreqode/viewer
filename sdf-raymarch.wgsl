@@ -4,6 +4,7 @@ struct Parameters {
   minimum: vec4<f32>,
   maximum: vec4<f32>,
   settings: vec4<f32>,
+  view: mat4x4<f32>,
 };
 @group(0) @binding(0) var<uniform> p: Parameters;
 @group(0) @binding(1) var field: texture_3d<f32>;
@@ -86,6 +87,10 @@ fn valueAt(point: vec3<f32>) -> f32 {
   var normal=-direction;
   if(length(gradient)>1e-12){normal=normalize(gradient);}
   if(dot(normal,direction)>0.0){normal=-normal;}
+  if(p.settings.z>0.5){
+    let viewNormal=normalize((p.view*vec4<f32>(normal,0.0)).xyz);
+    return vec4<f32>(viewNormal*0.5+vec3<f32>(0.5),1.0);
+  }
   let light=normalize(vec3<f32>(-0.5,0.9,0.8));
   let diffuse=max(dot(normal,light),0.0);
   let rim=pow(1.0-max(dot(normal,-direction),0.0),3.0);

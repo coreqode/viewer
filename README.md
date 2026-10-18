@@ -1,6 +1,6 @@
 # Viewer
 
-A minimal, browser-based viewer for meshes, point clouds, CAD geometry, and ONNX coordinate fields. Open local files, inspect geometry, and convert between supported formats. The viewer starts empty; no sample models, pretrained weights, or checkpoints are bundled.
+A minimal, browser-based viewer for meshes, point clouds, CAD geometry, and ONNX coordinate fields. Open local files, inspect geometry, and convert between supported formats. The viewer opens with a generated torus knot in Edges view, ready to inspect or convert. No pretrained weights or checkpoints are bundled.
 
 The application is static HTML, CSS, and JavaScript. It needs no application server, account, npm installation, or build step. Files are processed on your device; some readers download their runtime packages on first use.
 
@@ -76,14 +76,14 @@ Use **Open file** or drag files onto the canvas. Select the main model and compa
 | Pan | Right-drag |
 | Fit the loaded object | Fit button or **F** |
 | Toggle the ground grid | Grid button or **G** |
-| Change mesh display | **Solid**, **Edges**, or **Wire** |
+| Change mesh display | **Normal**, **Solid**, **Edges** (default), or **Wire** |
 | Inspect the mesh | **Info** |
 | Export another format | **Convert** |
 | Configure an ONNX field | **Field** |
 
 The corner orientation indicator shows fixed world axes: **red X**, **green Y**, and **blue Z**. Dimmed ends show negative directions. It follows camera rotation in mesh and ONNX views and lets pointer gestures pass through it. It indicates direction; it does not transform objects or snap the camera.
 
-Models use neutral shading. Original materials, textures, animation playback, solver settings, editable CAD assemblies, and simulation-field visualization are not presented. The viewer centers and scales displayed geometry to fit the viewport; measurements and exports use the captured loader coordinates described below.
+**Normal** visualizes surface-normal directions as RGB colors in view space, using the model’s vertex normals (computed when missing). Colors change as you orbit the camera. **Solid** uses neutral flat shading, **Edges** adds triangle edges, and **Wire** shows the triangle wireframe. Original materials, textures, animation playback, solver settings, editable CAD assemblies, and simulation-field visualization are not presented. The viewer centers and scales displayed geometry to fit the viewport; measurements and exports use the captured loader coordinates described below.
 
 ## Supported formats
 
@@ -274,7 +274,8 @@ The viewer does not infer normalization, latent vectors, extra inputs, or the co
 2. The viewer starts with a **64³** grid, bounds **`[-1,1]` on each axis**, and level **0**.
 3. Use **Field** to change XYZ bounds, scalar level, or grid resolution.
 4. Changing only the level reuses the GPU texture. Changing bounds/resolution samples the model again.
-5. Orbit, pan, zoom, and Fit use the same camera controls. Mesh wireframe, grid, Info, and mesh conversion are unavailable for fields.
+5. Switch between **Normal** (surface-normal RGB colors) and **Solid** (shaded surface) without sampling the model again. Normal colors use the sampled field’s gradient, transformed into view space, and change as you orbit. They approximate the sampled surface normals rather than the exact neural-network gradient.
+6. Orbit, pan, zoom, and Fit use the same camera controls. Edges, wireframe, grid, Info, and mesh conversion are unavailable for fields.
 
 The field summary reports sampled minimum/maximum values and the inference backend. A notice indicates when the selected level lies outside the sampled range or the level set crosses the box boundary. Use that feedback to adjust the level or bounds.
 
@@ -321,7 +322,7 @@ The viewer accepts up to **40 MB total selected file bytes**, with a maximum of 
 
 | Symptom | Check |
 | --- | --- |
-| Blank canvas on first open | The viewer starts empty. Open or drop your own model. |
+| Blank canvas on first open | A torus knot should appear automatically. Check WebGL support and module loading, or open your own model. |
 | Failed module/worker loading | Use an HTTP server or HTTPS hosting rather than opening `index.html` directly. Preserve the complete `dist/` tree. |
 | A referenced file cannot be found | Select the main model and companions together. Use folder opening when references include subdirectories. Preserve filenames and relative paths. |
 | Engineering format/analysis fails initially | Check internet access for the Pyodide/package downloads. Basic mesh viewing through bundled loaders can still work. |
