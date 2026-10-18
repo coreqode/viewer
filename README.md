@@ -150,7 +150,7 @@ CAD import uses Open CASCADE through occt-import-js. The viewer does not expose 
 
 | Format | Extension | Contract |
 | --- | --- | --- |
-| ONNX coordinate field | `.onnx` | One dynamic float32 `[N,3]` input and one float32 `[N]` or `[N,1]` scalar output. Select referenced external weights together. |
+| ONNX coordinate field | `.onnx` | One float32 `[N,3]` input (dynamic or fixed batch size) and one float32 `[N]` or `[N,1]` scalar output. Select referenced external weights together. |
 
 See [ONNX scalar fields](#onnx-scalar-fields) for normalization, sampling, and rendering details.
 
@@ -260,7 +260,7 @@ Supply your own `.onnx` model. No model downloads, example launchers, checkpoint
 | Item | Requirement |
 | --- | --- |
 | Inputs | Exactly one tensor input |
-| Input type/shape | float32 `[N,3]`, with a dynamic batch dimension `N` |
+| Input type/shape | float32 `[N,3]`, with a dynamic or positive fixed batch dimension `N` (including `[1,3]`) |
 | Outputs | Exactly one tensor output |
 | Output type/shape | float32 `[N]` or `[N,1]`, one scalar per input coordinate |
 | Coordinates | The model's expected XYZ coordinate system; normalization is model-specific |
@@ -281,7 +281,7 @@ The field summary reports sampled minimum/maximum values and the inference backe
 
 ### Inference and rendering
 
-ONNX Runtime Web evaluates the network in batches of 8,192 coordinates. The WebGPU execution provider is attempted first; WASM is a labeled fallback if that provider cannot initialize the graph. Sessions are released after sampling, and input/output tensors are disposed after each batch, including inference failures.
+ONNX Runtime Web evaluates dynamic-batch networks in batches of up to 8,192 coordinates. Fixed-batch models use their declared batch size; the final batch repeats the last coordinate to fill any unused rows, and those extra results are discarded. Models must evaluate each coordinate independently of the other rows in a batch. The WebGPU execution provider is attempted first; WASM is a labeled fallback if that provider cannot initialize the graph. Fixed batches smaller than 64 use WASM to avoid GPU submission/readback overhead per small batch. Dynamic-batch exports are recommended for faster sampling of large grids. Sessions are released after sampling, and input/output tensors are disposed after each batch, including inference failures.
 
 The output is uploaded to a 3D `r32float` texture. A fullscreen WGSL fragment shader ray marches **the sampled texture**, using manual trilinear interpolation, sign changes, and bisection refinement. The network is not evaluated per fragment. Both scalar sign conventions are accepted; no valid distance bound is assumed.
 
@@ -328,7 +328,7 @@ The viewer accepts up to **40 MB total selected file bytes**, with a maximum of 
 | Engineering format/analysis fails initially | Check internet access for the Pyodide/package downloads. Basic mesh viewing through bundled loaders can still work. |
 | Unsupported MSH/XML/DAT or other variant | An extension identifies a reader, not every possible file with that suffix. Check the format table and the reported error. |
 | CAD loads no visible geometry | Curve-only files may contain no supported displayable faces. |
-| ONNX model rejected | Check one dynamic float32 `[N,3]` input, one scalar float32 output, operator support, and external data selection. |
+| ONNX model rejected | Check one float32 `[N,3]` input (dynamic or fixed batch size), one scalar float32 output, operator support, and external data selection. |
 | Field has no visible surface | Check the model's normalization, bounds, scalar range, and level. A compatible interface does not guarantee a zero crossing inside the box. |
 | Large field causes an allocation error | Choose a smaller grid or close other GPU-heavy work. Texture-dimension support does not guarantee sufficient memory. |
 | Browser reports a 512 MiB upload-buffer error | Reload after replacing all application modules. Current uploads use independent chunks of at most 16 MiB; old cached code may still be active in an already-open tab. |

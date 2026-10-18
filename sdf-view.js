@@ -1,5 +1,5 @@
 import {Matrix4} from 'three';
-import {sampleOnnxSdf} from './sdf-inference.js?v=memory-cleanup-1';
+import {sampleOnnxSdf} from './sdf-inference.js?v=fixed-batch-1';
 let gpu;
 function validateTextureSize(device,config){
   if(config.resolution>device.limits.maxTextureDimension3D)throw Error(`This GPU supports 3D textures up to ${device.limits.maxTextureDimension3D} per axis. Choose a smaller sampling grid.`);
