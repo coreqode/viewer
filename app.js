@@ -292,3 +292,4 @@ renderer.setSize(innerWidth,innerHeight);camera.aspect=innerWidth/innerHeight;ca
 fit();
 renderer.setAnimationLoop(()=>{controls.update();orientationGizmo.update(camera);if(activeSdf){if(!activeSdf.failed){try{activeSdf.view.render(camera);}catch(error){activeSdf.failed=true;notify('WebGPU rendering stopped: '+error.message,true,true);}}}else renderer.render(scene,camera);});
 renderer.domElement.addEventListener('webglcontextlost',event=>{event.preventDefault();notify('The graphics context was lost. Reload the page to restore the viewer.',true,true);});
+
