@@ -279,8 +279,6 @@ $('#sdf-form').onsubmit=async event=>{
     }else{const {files,model}=activeSdf;sdfDialog.close();await openSdfFiles(files,model,config);}
   }catch(error){$('#sdf-error').textContent=error.message;}
 };
-$('#open-folder').onclick=()=>$('#folder').click();
-$('#folder').onchange=event=>{formatsDialog.close();openFiles(Array.from(event.target.files));event.target.value='';};
 $('#confirm-model').onclick=()=>{
   const file=selectedFiles[Number($('#model-choice').value)];
   $('#model-dialog').close();openFiles(selectedFiles,file);selectedFiles=[];

@@ -67,7 +67,7 @@ The root `README.md` is the documentation source. A matching copy is served as `
 
 ## Open files and navigate
 
-Use **Open file** or drag files onto the canvas. Select the main model and companion files together. **Formats → Open a folder** preserves subdirectories for models that reference other files. When multiple supported models are selected, choose which one to display.
+Use **Open file** or drag files onto the canvas. Select the main model and companion files together. When multiple supported models are selected, choose which one to display.
 
 | Action | Control |
 | --- | --- |
@@ -324,7 +324,7 @@ The viewer accepts up to **40 MB total selected file bytes**, with a maximum of 
 | --- | --- |
 | Blank canvas on first open | A torus knot should appear automatically. Check WebGL support and module loading, or open your own model. |
 | Failed module/worker loading | Use an HTTP server or HTTPS hosting rather than opening `index.html` directly. Preserve the complete `dist/` tree. |
-| A referenced file cannot be found | Select the main model and companions together. Use folder opening when references include subdirectories. Preserve filenames and relative paths. |
+| A referenced file cannot be found | Select the main model and companions together. Preserve companion filenames; use distinct filenames when files come from different subdirectories. |
 | Engineering format/analysis fails initially | Check internet access for the Pyodide/package downloads. Basic mesh viewing through bundled loaders can still work. |
 | Unsupported MSH/XML/DAT or other variant | An extension identifies a reader, not every possible file with that suffix. Check the format table and the reported error. |
 | CAD loads no visible geometry | Curve-only files may contain no supported displayable faces. |

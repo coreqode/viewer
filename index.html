@@ -17,7 +17,6 @@
 <div id="drag-overlay" hidden><div><span>↓</span><p>Drop to open</p><small>One model, with its companion files</small></div></div>
 <div id="notice" tabindex="0" role="status" aria-live="polite" hidden></div>
 <input id="file" type="file" multiple hidden>
-<input id="folder" type="file" webkitdirectory multiple hidden>
 <aside id="info-panel" aria-labelledby="info-title" hidden>
 <div class="dialog-header"><div><h1 id="info-title">Geometry</h1></div><button id="close-info" aria-label="Close geometry information">×</button></div>
 <label for="info-connectivity">Connectivity</label><select id="info-connectivity"><option value="welded">Weld positions</option><option value="indexed">Loaded indices</option></select>
@@ -46,14 +45,13 @@
 </dialog>
 <dialog id="model-dialog" aria-labelledby="model-title"><div class="dialog-header"><div><h1 id="model-title">Which model?</h1><p>Other selected files stay available as companions.</p></div></div><label for="model-choice">Model to display</label><select id="model-choice"></select><div class="model-actions"><button id="cancel-model">Cancel</button><button id="confirm-model" class="open">Open model</button></div></dialog>
 <dialog id="formats-dialog" aria-labelledby="formats-title">
-<div class="dialog-header"><div><h1 id="formats-title">Geometry, in many forms.</h1><p>One model at a time. Select companion files together.</p></div><button id="close-formats" aria-label="Close formats">×</button></div>
-<div class="format-intro">A geometry viewer: shapes, edges and points. Materials, textures, animations and simulation fields are not displayed.</div>
+<div class="dialog-header"><div><h1 id="formats-title">Supported formats</h1><p>Select one model and its companion files together.</p></div><button id="close-formats" aria-label="Close formats">×</button></div>
 <details open><summary>Models &amp; point clouds</summary><ul data-reader="three"></ul></details>
-<details><summary>Engineering &amp; scientific meshes</summary><p class="section-note">Reader downloads on first use. Higher-order elements use corner nodes. Unsupported cells are reported. Volume cells display their faces.</p><ul data-reader="meshio"></ul></details>
-<details><summary>CAD geometry</summary><p class="section-note">CAD reader loads on first use. Surfaces become display triangles; this does not provide CAD editing or exact measurements.</p><ul data-reader="cad"></ul></details>
-<details><summary>Neural &amp; scalar fields</summary><ul data-reader="sdf"></ul>
+<details><summary>Engineering meshes</summary><p class="section-note">Corner nodes only. Volume meshes include internal faces.</p><ul data-reader="meshio"></ul></details>
+<details><summary>CAD</summary><p class="section-note">Surfaces are triangulated.</p><ul data-reader="cad"></ul></details>
+<details><summary>Neural fields</summary><ul data-reader="sdf"></ul>
 </details>
-<button id="open-folder" class="folder-button">Open a folder with companion files ↗</button><div class="format-footnote">Up to 40 MB of selected files · 2 million display vertices / triangles. Some format variants and extensions are unsupported. Skinned and instanced models use Wire mode for edges. Files are processed on your device.<br><a href="https://github.com/nschloe/meshio" target="_blank" rel="noreferrer">meshio</a> · <a href="https://threejs.org/" target="_blank" rel="noreferrer">Three.js</a> · <a href="https://github.com/kovacsv/occt-import-js" target="_blank" rel="noreferrer">Open CASCADE reader &amp; source</a></div>
+<div class="format-footnote">40 MB total · 2M vertices / triangles</div>
 </dialog>
-<script type="module" src="app.js?v=welcome-geometry-1"></script>
+<script type="module" src="app.js?v=minimal-formats-2"></script>
 </body></html>
