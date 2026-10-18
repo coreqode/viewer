@@ -1,0 +1,7 @@
+Trimesh 5.1.1 — unmodified Python wheel
+MIT license; see LICENSE.md and bundled wheel metadata.
+Source: https://github.com/mikedh/trimesh/tree/5.1.1
+Package: https://pypi.org/project/trimesh/5.1.1/
+SHA-256: c5be85a3e31e9ff749f9b0aecc204e37a2cf7cca4e92cd066bb5f3d3c1127765
+
+The website uses Trimesh analysis APIs through mesh-analysis.py. No Trimesh source changes.

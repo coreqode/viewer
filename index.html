@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#f7f7f5"><meta name="description" content="View model, engineering mesh, point cloud, CAD geometry and ONNX fields locally in your browser.">
+<title>Viewer</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='m16 3 12 7v13l-12 7-12-7V10Zm0 0v14m12-7-12 7-12-7m12 7v13' fill='none' stroke='%23232323' stroke-width='2'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="style.css?v=minimal-1">
+<script type="importmap">{"imports":{"three":"./vendor/three.module.js"}}</script>
+</head>
+<body>
+<div id="viewport" aria-label="Interactive 3D mesh. Drag to orbit, scroll to zoom, right-drag to pan."></div>
+<header><a class="brand" href="./" aria-label="Viewer home"><svg viewBox="0 0 28 28" aria-hidden="true"><path d="m14 2 11 6.5v12L14 27 3 20.5v-12Zm0 0v12.5m11-6-11 6.5L3 8.5m11 6V27"/></svg><span>Viewer</span></a><div class="file-area"><button id="sdf-settings" class="formats-link" hidden>Field</button><button id="info" class="formats-link" disabled aria-expanded="false" aria-controls="info-panel">Info</button><button id="convert" class="formats-link" disabled>Convert</button><button id="formats" class="formats-link">Formats</button><button id="open" class="open"><span aria-hidden="true">＋</span> Open file</button></div></header>
+<main><div class="corner-label" hidden><span class="status-dot"></span><span id="model-label"></span></div><div id="drop-hint"><p>Drop a file to view</p><span>.msh &nbsp; .obj &nbsp; .glb &nbsp; .step &nbsp; .onnx &nbsp; + more</span></div></main>
+<div class="toolbar" aria-label="View settings"><div class="modes" role="group" aria-label="Display mode"><button data-mode="solid" aria-pressed="false">Solid</button><button data-mode="edges" aria-pressed="true">Edges</button><button data-mode="wire" aria-pressed="false">Wire</button></div><span class="divider"></span><button id="fit" class="icon" title="Fit mesh (F)" aria-label="Fit mesh"><svg viewBox="0 0 20 20"><path d="M7 3H3v4m10-4h4v4M3 13v4h4m10-4v4h-4"/></svg></button><button id="grid" class="icon" title="Toggle grid (G)" aria-label="Toggle grid" aria-pressed="false"><svg viewBox="0 0 20 20"><path d="M3 3h14v14H3Zm0 7h14M10 3v14"/></svg></button></div>
+<footer><span id="stats">No file loaded</span><span class="gestures">Drag to orbit <i>·</i> Scroll to zoom <i>·</i> Right-drag to pan</span><span class="privacy"><span class="status-dot"></span> Files stay on your device</span></footer>
+<div id="drag-overlay" hidden><div><span>↓</span><p>Drop to open</p><small>One model, with its companion files</small></div></div>
+<div id="notice" tabindex="0" role="status" aria-live="polite" hidden></div>
+<input id="file" type="file" multiple hidden>
+<input id="folder" type="file" webkitdirectory multiple hidden>
+<aside id="info-panel" aria-labelledby="info-title" hidden>
+<div class="dialog-header"><div><h1 id="info-title">Geometry</h1></div><button id="close-info" aria-label="Close geometry information">×</button></div>
+<label for="info-connectivity">Connectivity</label><select id="info-connectivity"><option value="welded">Weld positions</option><option value="indexed">Loaded indices</option></select>
+<p id="info-status" role="status" aria-live="polite"></p><div id="info-body"></div>
+<div class="info-actions"><button id="download-info" class="open" disabled>Export JSON</button><a href="README.md#geometry-and-topology" target="_blank" rel="noreferrer">Details &amp; limitations ↗</a></div>
+</aside>
+<div id="orientation-gizmo" role="img" aria-label="World-axis orientation: red X, green Y, blue Z. Arrows follow the camera; dimmed ends show negative directions."></div>
+<dialog id="sdf-dialog" aria-labelledby="sdf-title">
+<form id="sdf-form"><div class="dialog-header"><div><h1 id="sdf-title">Explore the field.</h1><p>Choose a sampling box and an isosurface.</p></div><button id="close-sdf" type="button" aria-label="Close field settings">×</button></div>
+<div class="sdf-bounds"><span>Axis</span><span>Minimum</span><span>Maximum</span>
+<label for="sdf-min-x">X</label><input id="sdf-min-x" aria-label="X minimum" type="number" step="any" required><input id="sdf-max-x" aria-label="X maximum" type="number" step="any" required>
+<label for="sdf-min-y">Y</label><input id="sdf-min-y" aria-label="Y minimum" type="number" step="any" required><input id="sdf-max-y" aria-label="Y maximum" type="number" step="any" required>
+<label for="sdf-min-z">Z</label><input id="sdf-min-z" aria-label="Z minimum" type="number" step="any" required><input id="sdf-max-z" aria-label="Z maximum" type="number" step="any" required></div>
+<div class="sdf-options"><label for="sdf-resolution">Sampling grid<select id="sdf-resolution" aria-describedby="sdf-grid-note"><option value="64">64³ · fast</option><option value="96">96³ · balanced</option><option value="128">128³ · fine</option><option value="256">256³ · 64 MiB field</option><option value="512">512³ · 512 MiB field</option></select></label><label for="sdf-iso">Level value<input id="sdf-iso" type="number" step="any" required></label></div>
+<p id="sdf-grid-note" class="section-note">256³ and 512³ take longer to sample. CPU samples are released after GPU upload. Open another file to stop sampling.</p>
+<p id="sdf-summary" class="section-note"></p><p class="section-note">Ray marching shows the sampled scalar field inside this box. Thin or tangent features can be missed; this is not a certified distance-field renderer. Mesh conversion is unavailable for ONNX fields.</p>
+<p id="sdf-error" role="status"></p><div class="model-actions"><button class="open" type="submit">Apply</button></div></form>
+</dialog>
+<dialog id="convert-dialog" aria-labelledby="convert-title">
+<div class="dialog-header"><div><h1 id="convert-title">A different format.</h1><p id="convert-source"></p></div><button id="close-convert" aria-label="Close converter">×</button></div>
+<label for="export-format">Convert to</label><select id="export-format"></select>
+<p id="export-note" class="conversion-note"></p>
+<p class="section-note">Exports keep the loaded coordinate values. CAD surfaces become mesh geometry; STEP, IGES and BREP output is not available.</p>
+<p id="convert-status" role="status" aria-live="polite"></p>
+<div class="model-actions"><button id="download-converted" class="open">Convert &amp; download</button></div>
+</dialog>
+<dialog id="model-dialog" aria-labelledby="model-title"><div class="dialog-header"><div><h1 id="model-title">Which model?</h1><p>Other selected files stay available as companions.</p></div></div><label for="model-choice">Model to display</label><select id="model-choice"></select><div class="model-actions"><button id="cancel-model">Cancel</button><button id="confirm-model" class="open">Open model</button></div></dialog>
+<dialog id="formats-dialog" aria-labelledby="formats-title">
+<div class="dialog-header"><div><h1 id="formats-title">Geometry, in many forms.</h1><p>One model at a time. Select companion files together.</p></div><button id="close-formats" aria-label="Close formats">×</button></div>
+<div class="format-intro">A geometry viewer: shapes, edges and points. Materials, textures, animations and simulation fields are not displayed.</div>
+<details open><summary>Models &amp; point clouds</summary><ul data-reader="three"></ul></details>
+<details><summary>Engineering &amp; scientific meshes</summary><p class="section-note">Reader downloads on first use. Higher-order elements use corner nodes. Unsupported cells are reported. Volume cells display their faces.</p><ul data-reader="meshio"></ul></details>
+<details><summary>CAD geometry</summary><p class="section-note">CAD reader loads on first use. Surfaces become display triangles; this does not provide CAD editing or exact measurements.</p><ul data-reader="cad"></ul></details>
+<details><summary>Neural &amp; scalar fields</summary><ul data-reader="sdf"></ul>
+</details>
+<button id="open-folder" class="folder-button">Open a folder with companion files ↗</button><div class="format-footnote">Up to 40 MB of selected files · 2 million display vertices / triangles. Some format variants and extensions are unsupported. Skinned and instanced models use Wire mode for edges. Files are processed on your device.<br><a href="https://github.com/nschloe/meshio" target="_blank" rel="noreferrer">meshio</a> · <a href="https://threejs.org/" target="_blank" rel="noreferrer">Three.js</a> · <a href="https://github.com/kovacsv/occt-import-js" target="_blank" rel="noreferrer">Open CASCADE reader &amp; source</a></div>
+</dialog>
+<script type="module" src="app.js?v=minimal-1"></script>
+</body></html>
