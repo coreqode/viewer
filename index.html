@@ -5,13 +5,13 @@
 <meta name="theme-color" content="#f7f7f5"><meta name="description" content="View model, engineering mesh, point cloud, CAD geometry and ONNX fields locally in your browser.">
 <title>Viewer</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='m16 3 12 7v13l-12 7-12-7V10Zm0 0v14m12-7-12 7-12-7m12 7v13' fill='none' stroke='%23232323' stroke-width='2'/%3E%3C/svg%3E">
-<link rel="stylesheet" href="style.css?v=normal-view-1">
+<link rel="stylesheet" href="style.css?v=drop-typography-1">
 <script type="importmap">{"imports":{"three":"./vendor/three.module.js"}}</script>
 </head>
 <body>
 <div id="viewport" aria-label="Interactive 3D mesh. Drag to orbit, scroll to zoom, right-drag to pan."></div>
-<header><a class="brand" href="./" aria-label="Viewer home"><svg viewBox="0 0 28 28" aria-hidden="true"><path d="m14 2 11 6.5v12L14 27 3 20.5v-12Zm0 0v12.5m11-6-11 6.5L3 8.5m11 6V27"/></svg><span>Viewer</span></a><div class="file-area"><button id="sdf-settings" class="formats-link" hidden>Field</button><button id="info" class="formats-link" disabled aria-expanded="false" aria-controls="info-panel">Info</button><button id="convert" class="formats-link" disabled>Convert</button><button id="formats" class="formats-link">Formats</button><button id="open" class="open"><span aria-hidden="true">＋</span> Open file</button></div></header>
-<main><div class="corner-label" hidden><span class="status-dot"></span><span id="model-label"></span></div><div id="drop-hint"><p>Drop a file to view</p><span>.msh &nbsp; .obj &nbsp; .glb &nbsp; .step &nbsp; .onnx &nbsp; + more</span></div></main>
+<header><div class="brand-lockup"><a class="brand" href="./" aria-label="Viewer home"><svg viewBox="0 0 28 28" aria-hidden="true"><path d="m14 2 11 6.5v12L14 27 3 20.5v-12Zm0 0v12.5m11-6-11 6.5L3 8.5m11 6V27"/></svg><span>Viewer</span></a><span class="brand-tagline">30+ geometry formats &amp; neural fields</span></div><div class="file-area"><button id="sdf-settings" class="formats-link" hidden>Field</button><button id="info" class="formats-link" disabled aria-expanded="false" aria-controls="info-panel">Info</button><button id="convert" class="formats-link" disabled>Convert</button><button id="formats" class="formats-link">Formats</button><button id="open" class="open"><span aria-hidden="true">＋</span> Open file</button></div></header>
+<main><div class="corner-label" hidden><span class="status-dot"></span><span id="model-label"></span></div><div id="drop-hint"><p>Drop your geometry/ONNX file here.</p></div></main>
 <div class="toolbar" aria-label="View settings"><div class="modes" role="group" aria-label="Display mode"><button data-mode="normal" aria-pressed="false" title="Surface normals as RGB colors">Normal</button><button data-mode="solid" aria-pressed="false" title="Flat shaded surface">Solid</button><button data-mode="edges" aria-pressed="true" title="Surface with triangle edges">Edges</button><button data-mode="wire" aria-pressed="false" title="Triangle wireframe">Wire</button></div><span class="divider"></span><button id="fit" class="icon" title="Fit mesh (F)" aria-label="Fit mesh"><svg viewBox="0 0 20 20"><path d="M7 3H3v4m10-4h4v4M3 13v4h4m10-4v4h-4"/></svg></button><button id="grid" class="icon" title="Toggle grid (G)" aria-label="Toggle grid" aria-pressed="false"><svg viewBox="0 0 20 20"><path d="M3 3h14v14H3Zm0 7h14M10 3v14"/></svg></button></div>
 <footer><span id="stats">No file loaded</span><span class="gestures">Drag to orbit <i>·</i> Scroll to zoom <i>·</i> Right-drag to pan</span><span class="privacy"><span class="status-dot"></span> Coded with Codex</span></footer>
 <div id="drag-overlay" hidden><div><span>↓</span><p>Drop to open</p><small>One model, with its companion files</small></div></div>
@@ -55,5 +55,5 @@
 </details>
 <button id="open-folder" class="folder-button">Open a folder with companion files ↗</button><div class="format-footnote">Up to 40 MB of selected files · 2 million display vertices / triangles. Some format variants and extensions are unsupported. Skinned and instanced models use Wire mode for edges. Files are processed on your device.<br><a href="https://github.com/nschloe/meshio" target="_blank" rel="noreferrer">meshio</a> · <a href="https://threejs.org/" target="_blank" rel="noreferrer">Three.js</a> · <a href="https://github.com/kovacsv/occt-import-js" target="_blank" rel="noreferrer">Open CASCADE reader &amp; source</a></div>
 </dialog>
-<script type="module" src="app.js?v=default-edges-1"></script>
+<script type="module" src="app.js?v=welcome-geometry-1"></script>
 </body></html>

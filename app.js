@@ -309,6 +309,7 @@ demo.rotation.set(.3,-.2,.2);
 // Capture original coordinates before display centers/scales the demo.
 conversionSource=captureConversion(demo,'Torus knot');
 display(demo,'Torus knot');
+$('#drop-hint').hidden=false;
 $('#info').disabled=false;
 $('#convert').disabled=false;
 renderer.setAnimationLoop(()=>{controls.update();orientationGizmo.update(camera);if(activeSdf){if(!activeSdf.failed){try{activeSdf.view.render(camera);}catch(error){activeSdf.failed=true;notify('WebGPU rendering stopped: '+error.message,true,true);}}}else renderer.render(scene,camera);});
