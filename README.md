@@ -281,7 +281,11 @@ The field summary reports sampled minimum/maximum values and the inference backe
 
 ### Inference and rendering
 
-ONNX Runtime Web evaluates dynamic-batch networks in batches of up to 8,192 coordinates. Fixed-batch models use their declared batch size; the final batch repeats the last coordinate to fill any unused rows, and those extra results are discarded. Models must evaluate each coordinate independently of the other rows in a batch. The WebGPU execution provider is attempted first; WASM is a labeled fallback if that provider cannot initialize the graph. Fixed batches smaller than 64 use WASM to avoid GPU submission/readback overhead per small batch. Dynamic-batch exports are recommended for faster sampling of large grids. Sessions are released after sampling, and input/output tensors are disposed after each batch, including inference failures.
+ONNX Runtime Web starts dynamic-batch networks at 8,192 coordinates per call and automatically adjusts up to 65,536. After the first call at each size (warmup), calls below 25 ms double the batch size; calls above 100 ms halve it, down to 256. A failed inference call is retried at the same grid position with a smaller batch, down to one coordinate; subsequent calls stay below the failed size. Errors that persist at size one are reported. Output validation errors are reported immediately. The final call uses only the remaining coordinates. Field reports the largest successful batch used.
+
+Fixed-batch models use their declared batch size; the final batch repeats the last coordinate to fill any unused rows, and those extra results are discarded. Models must evaluate each coordinate independently of the other rows in a batch.
+
+The WebGPU execution provider is attempted first; WASM is a labeled fallback if that provider cannot initialize the graph. Fixed batches smaller than 64 use WASM to avoid GPU submission/readback overhead per small batch. Dynamic-batch exports are recommended for faster sampling of large grids. Sessions are released after sampling, and input/output tensors are disposed after each batch, including inference failures.
 
 The output is uploaded to a 3D `r32float` texture. A fullscreen WGSL fragment shader ray marches **the sampled texture**, using manual trilinear interpolation, sign changes, and bisection refinement. The network is not evaluated per fragment. Both scalar sign conventions are accepted; no valid distance bound is assumed.
 

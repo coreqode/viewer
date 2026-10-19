@@ -232,7 +232,7 @@ async function openSdfFiles(files,model,config={resolution:64,iso:0,min:[-1,-1,-
   notify('Preparing ONNX field…',false,true);
   let next;
   try{
-    const {buildSdfView}=await import('./sdf-view.js?v=fixed-batch-1');
+    const {buildSdfView}=await import('./sdf-view.js?v=adaptive-batch-1');
     next=await buildSdfView({files,model,config,onProgress:message=>{if(id===loadId)notify(message,false,true);},cancelled:()=>id!==loadId});
     if(id!==loadId){next.view.dispose();return;}
     clearSdf();
@@ -263,7 +263,7 @@ $('#sdf-settings').onclick=()=>{
   const sample=activeSdf.view.sample;
   ['x','y','z'].forEach((axis,index)=>{$('#sdf-min-'+axis).value=sample.config.min[index];$('#sdf-max-'+axis).value=sample.config.max[index];});
   $('#sdf-resolution').value=sample.config.resolution;$('#sdf-iso').value=sample.config.iso;$('#sdf-error').textContent='';
-  $('#sdf-summary').textContent=`Sampled values: ${sample.minimum.toPrecision(5)} to ${sample.maximum.toPrecision(5)} · Inference: ${sample.backend} · Input: ${sample.inputName} [${sample.inputShape.join(',')}] → ${sample.outputName} scalar output.`;
+  $('#sdf-summary').textContent=`Sampled values: ${sample.minimum.toPrecision(5)} to ${sample.maximum.toPrecision(5)} · Inference: ${sample.backend} · Largest batch: ${sample.largestBatch.toLocaleString()} coordinates · Input: ${sample.inputName} [${sample.inputShape.join(',')}] → ${sample.outputName} scalar output.`;
   sdfDialog.showModal();
 };
 $('#close-sdf').onclick=()=>sdfDialog.close();
@@ -272,7 +272,7 @@ $('#sdf-form').onsubmit=async event=>{
   event.preventDefault();if(!activeSdf)return;
   const config={resolution:Number($('#sdf-resolution').value),iso:Number($('#sdf-iso').value),min:['x','y','z'].map(axis=>Number($('#sdf-min-'+axis).value)),max:['x','y','z'].map(axis=>Number($('#sdf-max-'+axis).value))};
   try{
-    const {validateSdfConfig}=await import('./sdf-inference.js?v=fixed-batch-1');validateSdfConfig(config);
+    const {validateSdfConfig}=await import('./sdf-inference.js?v=adaptive-batch-1');validateSdfConfig(config);
     const original=activeSdf.view.sample.config;
     if(config.resolution===original.resolution&&config.min.every((value,index)=>value===original.min[index])&&config.max.every((value,index)=>value===original.max[index])){
       activeSdf.view.setIso(config.iso);sdfDialog.close();notify(sdfNotice(activeSdf.view.sample),false,true);
